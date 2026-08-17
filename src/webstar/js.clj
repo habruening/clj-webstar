@@ -1,5 +1,5 @@
 (ns starcom.js
-  (:require [starcom.quasiquote :refer [qq]]))
+  (:require [webstar.quasiquote :refer [qq]]))
 
 
 (defmulti translate (fn [js-operation & args]
@@ -232,12 +232,13 @@
   (if (and (= (type code) clojure.lang.Cons)
            (= (first code) 'quote))
     `(js* (qq ~(second code)))
-    `(js* ~code)))
+    `(js* ~(list 'quote code))))
 
 (comment
 
   ; Normally we quote the code.
   (js '(console.log "Hello World!"))
+  (js (console.log "Hello World!"))
 
   ; We can use unquote
   (js '(console.log ~(clojure.string/upper-case "Hello World!")))

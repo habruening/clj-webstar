@@ -1,4 +1,4 @@
-(ns starcom.quasiquote)
+(ns webstar.quasiquote)
 
 (defmacro qq
   [code]
@@ -7,7 +7,7 @@
   (cond
 
     (symbol? code)
-    code
+    (list 'quote code)
 
     (number? code)
     code
