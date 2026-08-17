@@ -1,6 +1,6 @@
 (ns webstar.clj-generator-js
   (:require [webstar.js :refer [js js*]]
-            [starcom.quasiquote :refer [qq]]))
+            [webstar.quasiquote :refer [qq]]))
 
 (defn gen-clj* [code]
   (cond
