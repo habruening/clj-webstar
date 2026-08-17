@@ -1,109 +1,83 @@
 (ns starcom.clj-generator-js
-  (:require [starcom.js :refer [js]]))
+  (:require [starcom.js :refer [js js*]]
+            [starcom.quasiquote :refer [qq]]))
 
-(defn gen-clj [code]
+(defn gen-clj* [code]
   (cond
+    
+    (nil? code)
+    "nil"
 
     (symbol? code)
     (str code)
+
+    (number? code)
+    (str code)
+
+    (string? code)
+    (-> code
+        (clojure.string/replace #"\\" "\\\\\\\\\\\\\\\\")
+        (clojure.string/replace #"\"" "\\\\\\\\\"")
+        (clojure.string/replace #"\n" "\\\\n")
+        (#(str \" % \")))
+
+    (keyword? code)
+    (str code)
+
+    (vector? code)
+    (into (concat ['str "["] (interpose " " (map gen-clj* code)) ["]"]))
     
-    ))
+    (map? code)
+    (into (concat ['str "{"] (interpose " " (map gen-clj* (mapcat identity code))) ["}"]))
+    
+    (list? code)
+    (into (concat ['str "("] (interpose " " (map gen-clj* code)) [")"]))))
 
-(js '(str "a" "b"))
+(comment
+  (defn test-gen-clj* [code]
+    (->> code gen-clj* js (#(str "console.log(" % ")")) (spit "../../test.js"))
+    (spit "../../test.clj" (:out (clojure.java.shell/sh "nodejs" "../../test.js"))))
 
-(defn in-double-quotes [& s]
-  (str "\"" (apply str s) "\""))
+  (def test-gen-clj* gen-clj*)
+  
+  (test-gen-clj* nil)
+  (test-gen-clj* 'abdc)
+  (test-gen-clj* '3)
+  (test-gen-clj* "abc")
+  (test-gen-clj* "a\\x")
+  (test-gen-clj* "a\\\\x")
+  (test-gen-clj* "d\\d")
+  (test-gen-clj* "d\"d")
+  (test-gen-clj* "d\"n")
+  (test-gen-clj* "d\nu")
+  (test-gen-clj* "d
+                 u")
+  (test-gen-clj* :dsf)
+  (test-gen-clj* :ddd/sdf)
+  (test-gen-clj* [:a 1 "sdf"]) 
+  (test-gen-clj* [])
+  (test-gen-clj* {:a 1 :b 2 :c ""})
+  (test-gen-clj* {})
+  (test-gen-clj* '(func "2" "3"))
+  (test-gen-clj* '(func nil))
+  (test-gen-clj* '(+ "2" "3"))
+  (test-gen-clj* '(+))
+  (test-gen-clj* '())
+  )
 
-(in-double-quotes "sdf")
+(defmacro gen-clj [code]
+  (if (and (= (type code) clojure.lang.Cons)
+           (= (first code) 'quote))
+    `(gen-clj* (qq ~(second code)))
+    `(gen-clj* ~(list 'quote code))))
 
-(defn spaced [s]
-  (clojure.string/join " + \" \" + " (map gen-clj s)))
 
-(defn gen-clj
-  [code]
-  (let [substrings (cond (symbol? code)                            (in-double-quotes code)
-                         (number? code)                            (in-double-quotes code)
-                         (string? code)                            (->> (in-double-quotes "\\\"" code "\\\"")
-                                                                        (clojure.string/replace #"\\" "\\\\")
-                                                                        (clojure.string/replace #"\"" "\\\""))
-                         (keyword? code)                           (in-double-quotes code)
-                         (vector? code)                            (str (in-double-quotes "[")
-                                                                        " + " (spaced code) (if (empty? code) "" " + ")
-                                                                        (in-double-quotes "]"))
-                         (map? code)                               (str (in-double-quotes "{")
-                                                                        " + " (spaced (apply concat (into [] code))) (if (empty? code) "" " + ")
-                                                                        (in-double-quotes "}"))
-                         (and (list? code) (= (first code) '$))    (second code)
-                         (list? code)                              (str (in-double-quotes "(")
-                                                                        " + " (spaced code) (if (empty? code) "" " + ")
-                                                                        (in-double-quotes ")")))]
-    substrings))
+(comment
 
-(comment)
+  (gen-clj '(a :a "sdf"))
+  (gen-clj (a :a "sdf"))
 
-(defn connect-substrings [[last-of-result & _ :as reverse-result] substrings]
-  (if (and (= (last-of-result)))))
+  (let [a '(console.log "Hello World!")]
+    (gen-clj '(fn [] ~a)))
 
-(println (gen-clj  "sfd" ))
-
-(defmacro xxxx [x]
-  (println x))
-
-(xxxx '(x ~d))
-
-(defn gen-clj
-  [code]
-  (let [substrings (cond (symbol? code)                            [(in-double-quotes code)]
-                         (number? code)                            [(in-double-quotes code)]
-                         (string? code)                            [(->> (in-double-quotes "\\\"" code "\\\"")
-                                                                         (clojure.string/replace #"\\" "\\\\")
-                                                                         (clojure.string/replace #"\"" "\\\""))]
-                         (keyword? code)                           [(in-double-quotes code)]
-                         (vector? code)                            (concat [(in-double-quotes "[")]
-                                                                           (interpose (in-double-quotes " ") (map gen-clj code))
-                                                                           [(in-double-quotes "]")])
-                         (map? code)                               (concat [(in-double-quotes "{")]
-                                                                           (interpose " " (apply concat (into [] (map gen-clj code))))
-                                                                           (in-double-quotes "}"))
-                         (and (list? code) (= (first code) '$))    [(second code)]
-                         (list? code)                              (concat [(in-double-quotes "(")]
-                                                                           (interpose " " (map gen-clj code))
-                                                                           [(in-double-quotes ")")]))]
-    (reduce (fn [result sub-string]))
-    (clojure.string/join " + " substrings)))
-
-(butlast (butlast [1 2 3]))
-
-(spit "output.txt" (gen-clj [:a [:sadf]]))
-(gen-clj 3)
-((gen-clj "asdf"))
-
-(concat [1] [2] [3])
-
-(println '("\\\"" code "\\\""))
-(clojure.string/join (gen-clj '(println "Hello")))
-(println "\\\"")
-(count "\\\"")
-
-(println (gen-clj "\\\""))
-
-(println "\\\"")
-
-(println "\\\"")
-
-(println (gen-clj '(defn gen-clj
-                     [code]
-                     (cond (symbol? code)                            (in-double-quotes code)
-                           (number? code)                            (in-double-quotes code)
-                           (string? code)                            (in-double-quotes "\\\"" code "\\\"")
-                           (keyword? code)                           (in-double-quotes code)
-                           (vector? code)                            (str (in-double-quotes "[")
-                                                                          " + " (spaced code) (if (empty? code) "" " + ")
-                                                                          (in-double-quotes "]"))
-                           (map? code)                               (str (in-double-quotes "{")
-                                                                          " + " (spaced (apply concat (into [] code))) (if (empty? code) "" " + ")
-                                                                          (in-double-quotes "}"))
-                           (and (list? code) (= (first code) '$))    (second code)
-                           (list? code)                              (str (in-double-quotes "(")
-                                                                          " + " (spaced code) (if (empty? code) "" " + ")
-                                                                          (in-double-quotes ")"))))))
+  )

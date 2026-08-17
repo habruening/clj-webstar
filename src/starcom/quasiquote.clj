@@ -7,7 +7,7 @@
   (cond
 
     (symbol? code)
-    (list 'quote code)
+    code
 
     (number? code)
     code
@@ -29,15 +29,18 @@
     (second code)
 
     (and (= (type code) clojure.lang.Cons)
-         (= (first code) 'quote)) 
+         (= (first code) 'quote))
     (list 'quote  code)
-    
+
+    ; todo: clojure.core/unquote-splicing
+
     (list? code)
     (apply list 'list (map #(list `qq %) code))))
 
 (comment
   (qq 4)
   (qq b)
+  (qq bd#)
   (qq "abc")
   (qq ())
   (qq [])
