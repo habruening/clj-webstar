@@ -47,7 +47,7 @@
   (qq (a))
   (qq (a b))
   (qq ({a b}))
-  (qq {a b})
+  (qq {a b}) 
   (qq [a b c])
   (qq (a [b c d] e))
   (qq (a (b c d) e))

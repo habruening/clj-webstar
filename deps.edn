@@ -1,1 +1,5 @@
-{}
+{:deps {http-kit/http-kit {:mvn/version "2.8.1"}
+        compojure/compojure {:mvn/version "1.7.2"}
+        dev.data-star.clojure/sdk {:mvn/version "1.0.0-RC11"}
+        dev.data-star.clojure/http-kit {:mvn/version "1.0.0-RC11"}
+        hiccup/hiccup {:mvn/version "2.0.0"}}}

@@ -4,7 +4,7 @@
 
 (defn gen-clj* [code]
   (cond
-    
+
     (nil? code)
     "nil"
 
@@ -26,12 +26,17 @@
 
     (vector? code)
     (into (concat ['str "["] (interpose " " (map gen-clj* code)) ["]"]))
-    
+
     (map? code)
     (into (concat ['str "{"] (interpose " " (map gen-clj* (mapcat identity code))) ["}"]))
-    
+
+    (and (list? code) (= (first code) 'on-client))
+    (list 'str "\"" (second code) "\"")
+
     (list? code)
     (into (concat ['str "("] (interpose " " (map gen-clj* code)) [")"]))))
+
+
 
 (comment
   (defn test-gen-clj* [code]
@@ -77,7 +82,10 @@
   (gen-clj '(a :a "sdf"))
   (gen-clj (a :a "sdf"))
 
-  (let [a '(console.log "Hello World!")]
+  (let [a '(console.log "Hello World!")] ; does not work ?
     (gen-clj '(fn [] ~a)))
+  
+  (let [a '(console.log "Hello World!")] ; does not work ?
+    (gen-clj '(fn [] (on-client a))))
 
   )

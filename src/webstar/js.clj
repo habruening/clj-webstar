@@ -1,4 +1,4 @@
-(ns starcom.js
+(ns webstar.js
   (:require [webstar.quasiquote :refer [qq]]))
 
 
@@ -149,6 +149,7 @@
   (js* '(str a b c))
   (js* '(str "a" "b"))
   (js* '(str "a" b "c" "d" 3 "e"))
+  (js* '(str a b (.toUpperCase c)))
   )
 
 (defmethod translate '= [_ left right]
