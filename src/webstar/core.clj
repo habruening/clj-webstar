@@ -6,6 +6,19 @@
 
 (def sessions (atom {}))
 
+(defn session-data [session]
+  ((@sessions session) :session-data))
+
+(defn switch!-session-data [session new-session-data]
+  (swap! sessions assoc-in [session :session-data] new-session-data))
+
+(defn swap!-session-data [session f]
+  (swap! sessions update-in [session :session-data] f))
+
+(defn load [session]
+  (list [:script (h/raw (js/js '(do (set! session ~session))))]
+        [:script {:type :module :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.2/bundles/datastar.js"}]))
+
 (defn sse-handler [request session updated-element] 
   (hk-gen/->sse-response
    request
