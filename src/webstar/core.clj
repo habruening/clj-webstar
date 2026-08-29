@@ -31,7 +31,7 @@
                      (swap! sessions assoc-in [session :connection] sse-gen)
                      (d*/patch-elements! sse-gen (str (h/html updated-element))))
     hk-gen/on-close (fn [sse-gen status]
-                      (swap! sessions assoc-in dissoc session))}))
+                      (swap! sessions dissoc session))}))
 
 (defmethod js/translate 'ds-get [_ arg]
   (str "@get" "(" (js/js* arg) ")"))
