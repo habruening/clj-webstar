@@ -17,7 +17,7 @@
    [:td [:button {:data-on:click (w*/on-server '(demo/remove (on-client session) ~i))} "x"]]])
 
 (defn people []
-  [:table {:id "everybody"} (map name-line (range (count @data)))])
+  [:table#contents (map name-line (range (count @data)))])
 
 (defn upper [session i]
   (swap! data update i clojure.string/upper-case)
@@ -44,14 +44,13 @@
   (let [session (str (random-uuid))]
     [:html
      [:head
-      [:script (h/raw (js/js '(do (set! session ~session))))]
-      [:script {:type :module :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.2/bundles/datastar.js"}]] 
-     [:body 
-      [:div {:id "everybody" :data-init (str "@get('/connect?session=' + session)")} 
-       (people)] 
-      [:input {:data-bind :name}] 
+      (w*/load session)] 
+     [:body
+      [:div {:data-init (str "@get('/connect?session=' + session)")}]
+      (people)
+      [:input {:data-bind :name}]
       [:button {:data-on:click (w*/on-server '(demo/add (on-client session) (on-client $name)))} "add"]]]))
-3
+
 (h/html (main-html))
 
 (defroutes app

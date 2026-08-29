@@ -10,7 +10,7 @@
   (hk-gen/->sse-response
    request
    {hk-gen/on-open (fn [sse-gen]
-                     (swap! sessions assoc session sse-gen)
+                     (swap! sessions assoc session {:connection sse-gen})
                      (d*/patch-elements! sse-gen (str (h/html updated-element))))
     hk-gen/on-close (fn [sse-gen status]
                       (swap! sessions dissoc session))}))
@@ -19,7 +19,7 @@
   (str "@get" "(" (js/js* arg) ")"))
 
 (defn patch [session updated-element]
-  (d*/patch-elements! (@sessions session) (str (h/html updated-element))))
+  (d*/patch-elements! ((@sessions session) :connection) (str (h/html updated-element))))
 
 (defn patch-for-everybody [updated-element] 
   (doseq [session (keys @sessions)] 
@@ -27,7 +27,3 @@
 
 (defmacro on-server [form]
   `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?session=" ('<- "session") "&form=" ~(list 'cljgen/gen-clj form))))))
-
-(require '[webstar.clj-generator-js :as cljgen])
-
-(on-server '(demo/add (on-client session) (on-client $name)))
