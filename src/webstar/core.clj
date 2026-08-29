@@ -4,21 +4,21 @@
             [hiccup2.core :as h]
             [webstar.js :as js]))
 
-(def con)
+(def sessions (atom {}))
 
-(defn sse-handler [request updated-element]
+(defn sse-handler [request session updated-element]
   (hk-gen/->sse-response
    request
    {hk-gen/on-open (fn [sse-gen]
-                     (def con sse-gen)
+                     (swap! sessions assoc session sse-gen)
                      (d*/patch-elements! sse-gen (str (h/html updated-element))))}))
 
 (defmethod js/translate 'ds-get [_ arg]
   (str "@get" "(" (js/js* arg) ")"))
 
-(defn patch [updated-element]
-  (d*/patch-elements! con (str (h/html updated-element)))
-  )
+(defn patch [session updated-element]
+  (d*/patch-elements! (@sessions session) (str (h/html updated-element))))
 
-(defmacro on-server [form]
-  `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?form=" ~(list 'cljgen/gen-clj form))))))
+(defmacro on-server [session form]
+  `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?session=" ~session "&form=" ~(list 'cljgen/gen-clj form))))))
+
