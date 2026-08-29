@@ -47,17 +47,17 @@
       [:script (h/raw (js/js '(do (set! session ~session))))]
       [:script {:type :module :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.2/bundles/datastar.js"}]] 
      [:body 
-      [:div#aa {:data-init (str "@get('/connect?session=' + session)")} "not-connected"]
-      (people)
+      [:div {:id "everybody" :data-init (str "@get('/connect?session=' + session)")} 
+       (people)] 
       [:input {:data-bind :name}] 
       [:button {:data-on:click (w*/on-server '(demo/add (on-client session) (on-client $name)))} "add"]]]))
-
+3
 (h/html (main-html))
 
 (defroutes app
   (GET "/" [] (do (println "new session")
                   (str (h/raw "<!DOCTYPE html>") (h/html (main-html)))))
-  (GET "/connect" [session :as request] (w*/sse-handler request session [:div#aa (str "connected as session " session)]))
+  (GET "/connect" [session :as request] (w*/sse-handler request session (people)))
   (GET "/eval" [session form] (do (println session ": " form) (eval (read-string form)) "")))
 
 (comment (def my-server (hk-server/run-server (wrap-params app) {:port 8080}))

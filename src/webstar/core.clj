@@ -6,13 +6,14 @@
 
 (def sessions (atom {}))
 
-(defn sse-handler [request session updated-element]
-  (println "new sesssion " session)
+(defn sse-handler [request session updated-element] 
   (hk-gen/->sse-response
    request
    {hk-gen/on-open (fn [sse-gen]
                      (swap! sessions assoc session sse-gen)
-                     (d*/patch-elements! sse-gen (str (h/html updated-element))))}))
+                     (d*/patch-elements! sse-gen (str (h/html updated-element))))
+    hk-gen/on-close (fn [sse-gen status]
+                      (swap! sessions dissoc session))}))
 
 (defmethod js/translate 'ds-get [_ arg]
   (str "@get" "(" (js/js* arg) ")"))
@@ -21,8 +22,7 @@
   (d*/patch-elements! (@sessions session) (str (h/html updated-element))))
 
 (defn patch-for-everybody [updated-element] 
-  (doseq [session (keys @sessions)]
-    (println session)
+  (doseq [session (keys @sessions)] 
     (patch session updated-element)))
 
 (defmacro on-server [form]
