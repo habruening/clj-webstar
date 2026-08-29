@@ -17,15 +17,6 @@
                      (def con sse-gen)
                      (d*/patch-elements! sse-gen (str (h/html [:div#aa "connected"]))))}))
 
-(defn patch [updated-element]
-  (d*/patch-elements! con (str (h/html updated-element))))
-
-(defmethod js/translate 'ds-get [_ arg]
-  (str "@get" "(" (js/js* arg) ")"))
-
-(defmacro on-server [form]
-  `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?form=" ~(list 'cljgen/gen-clj form))))))
-
 (def data (atom ["Peter" "Jon" "Julia" "Daniel"]))
 
 (defn name-line [i]
