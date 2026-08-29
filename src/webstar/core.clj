@@ -7,6 +7,7 @@
 (def sessions (atom {}))
 
 (defn sse-handler [request session updated-element]
+  (println "new sesssion " session)
   (hk-gen/->sse-response
    request
    {hk-gen/on-open (fn [sse-gen]
@@ -19,6 +20,14 @@
 (defn patch [session updated-element]
   (d*/patch-elements! (@sessions session) (str (h/html updated-element))))
 
-(defmacro on-server [session form]
-  `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?session=" ~session "&form=" ~(list 'cljgen/gen-clj form))))))
+(defn patch-for-everybody [updated-element] 
+  (doseq [session (keys @sessions)]
+    (println session)
+    (patch session updated-element)))
 
+(defmacro on-server [form]
+  `(js/js* (list ~''ds-get (list ~''encodeURI (list ~''str "/eval?session=" ('<- "session") "&form=" ~(list 'cljgen/gen-clj form))))))
+
+(require '[webstar.clj-generator-js :as cljgen])
+
+(on-server '(demo/add (on-client session) (on-client $name)))
