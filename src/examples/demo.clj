@@ -56,10 +56,9 @@
       [:div "Audience: " [:span#audience ""]]]]))
 
 (defroutes app
-  (GET "/" [] (do (println "new session")
-                  (str (h/raw "<!DOCTYPE html>") (h/html (main-html)))))
+  (GET "/" [] (str (h/raw "<!DOCTYPE html>") (h/html (main-html))))
   (GET "/connect" [session :as request] (w*/sse-handler request session (people)))
-  (GET "/eval" [session form] (do (println session ": " form) (eval (read-string form)) "")))
+  (GET "/eval" [session form] (do (eval (read-string form)) "")))
 
 (comment (def my-server (hk-server/run-server (wrap-params app) {:port 8080}))
          (my-server)
