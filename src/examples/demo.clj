@@ -31,7 +31,7 @@
   (into (subvec v 0 i) (subvec v (inc i) (count v))))
 
 (defn remove [session i]
-  (swap! data (partial remover i))
+  (swap! data (partial remover i))1
   (w*/patch-for-everybody (people)))
 
 (defn add [session name]

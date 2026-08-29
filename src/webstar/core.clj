@@ -6,8 +6,6 @@
 
 (def sessions (atom {}))
 
-(keys @sessions)
-
 (defn session-data [session]
   ((@sessions session) :session-data))
 
@@ -17,8 +15,7 @@
 (defn swap!-session-data [session f]
   (swap! sessions update-in [session :session-data] f))
 
-; Todo: Session data does not yet work. If you switch the tab, the connection is closed. This
-; clears the session data.
+; Todo: Sessions must be deleted after a timeout.
 
 (defn load [session]
   (list [:script (h/raw (js/js '(do (set! session ~session))))]
@@ -31,13 +28,14 @@
                      (swap! sessions assoc-in [session :connection] sse-gen)
                      (d*/patch-elements! sse-gen (str (h/html updated-element))))
     hk-gen/on-close (fn [sse-gen status]
-                      (swap! sessions dissoc session))}))
+                      (swap! sessions update-in [session] dissoc :connection))}))
 
 (defmethod js/translate 'ds-get [_ arg]
   (str "@get" "(" (js/js* arg) ")"))
 
 (defn patch [session updated-element]
-  (d*/patch-elements! ((@sessions session) :connection) (str (h/html updated-element))))
+  (if-let [connection ((@sessions session) :connection)]
+    (d*/patch-elements! connection (str (h/html updated-element)))))
 
 (defn patch-for-everybody [updated-element] 
   (doseq [session (keys @sessions)] 
