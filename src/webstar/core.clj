@@ -6,6 +6,8 @@
 
 (def sessions (atom {}))
 
+(keys @sessions)
+
 (defn session-data [session]
   ((@sessions session) :session-data))
 
@@ -15,6 +17,9 @@
 (defn swap!-session-data [session f]
   (swap! sessions update-in [session :session-data] f))
 
+; Todo: Session data does not yet work. If you switch the tab, the connection is closed. This
+; clears the session data.
+
 (defn load [session]
   (list [:script (h/raw (js/js '(do (set! session ~session))))]
         [:script {:type :module :src "https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.2/bundles/datastar.js"}]))
@@ -23,10 +28,10 @@
   (hk-gen/->sse-response
    request
    {hk-gen/on-open (fn [sse-gen]
-                     (swap! sessions assoc session {:connection sse-gen})
+                     (swap! sessions assoc-in [session :connection] sse-gen)
                      (d*/patch-elements! sse-gen (str (h/html updated-element))))
     hk-gen/on-close (fn [sse-gen status]
-                      (swap! sessions dissoc session))}))
+                      (swap! sessions assoc-in dissoc session))}))
 
 (defmethod js/translate 'ds-get [_ arg]
   (str "@get" "(" (js/js* arg) ")"))
