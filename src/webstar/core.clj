@@ -18,8 +18,8 @@
 (defn swap!-session-data [session & f-with-args]
   (apply swap! sessions update-in [session :session-data] f-with-args))
 
-(defn swap-in!-session-data [session ks f]
-  (swap! sessions update-in (into [session :session-data] ks) f))
+(defn swap-in!-session-data [session ks & f-with-args]
+  (apply swap! sessions update-in (into [session :session-data] ks) f-with-args))
 
 (comment
   (def sessions (atom {}))
@@ -38,6 +38,8 @@
   (swap!-session-data 12 dissoc :d)
   @sessions
   (swap-in!-session-data 12 ["b" :c] clojure.string/upper-case)
+  @sessions
+  (swap-in!-session-data 12 ["b"] assoc :e "eh")
   )
 
 ; Todo: Sessions must be deleted after a timeout.
